@@ -409,7 +409,9 @@
     };
     const FREE = 12;
     const LS_KEY = 'algarve-bingo-v2';
-    const POLL_MS = 8000;
+    const ACTIVE_MS = 1000;
+    const IDLE_MS = 15000;
+    const ACTIVE_WINDOW_MS = 30000;
     const cfg = (typeof CONFIG !== 'undefined') ? CONFIG : {};
     const SYNC_ENABLED = !!(cfg.JSONBIN_KEY && cfg.JSONBIN_BIN_ID);
     const READ_URL = SYNC_ENABLED ? `https://api.jsonbin.io/v3/b/${cfg.JSONBIN_BIN_ID}/latest` : null;
@@ -427,6 +429,7 @@
     const syncEl = document.getElementById('bingo-sync');
     const banner = document.getElementById('bingo-win-banner');
     const resetBtn = document.getElementById('bingo-reset');
+    const refreshBtn = document.getElementById('bingo-refresh');
     const tabs = document.querySelectorAll('.bingo-tab');
 
     function setSync(text, cls) {
@@ -465,6 +468,9 @@
       return out;
     }
 
+    let lastActivity = 0;
+    function bump() { lastActivity = Date.now(); }
+
     async function pullState() {
       if (!SYNC_ENABLED) { setSync('This device only', 'error'); return; }
       try {
@@ -473,9 +479,14 @@
         const body = await r.json();
         const remote = normalise(body && body.record);
         if (remote) {
-          state = remote;
-          saveLocal();
-          render();
+          const before = JSON.stringify(state);
+          const after = JSON.stringify(remote);
+          if (before !== after) {
+            state = remote;
+            saveLocal();
+            render();
+            bump();
+          }
           setSync('Synced', 'ok');
         }
       } catch (e) {
@@ -534,6 +545,7 @@
             state[active][i] = !state[active][i];
             saveLocal();
             render();
+            bump();
             pushState();
           });
         }
@@ -562,12 +574,21 @@
       });
     });
 
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', () => {
+        setSync('Syncing...');
+        bump();
+        pullState();
+      });
+    }
+
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
         state[active] = Array(25).fill(false);
         state[active][FREE] = true;
         saveLocal();
         render();
+        bump();
         pushState();
       });
     }
@@ -575,13 +596,26 @@
     loadLocal();
     buildBoard();
     render();
+    bump();
     pullState();
 
-    setInterval(() => {
-      if (document.visibilityState === 'visible' && !pushing) pullState();
-    }, POLL_MS);
+    let pollTimer = null;
+    function schedulePoll() {
+      clearTimeout(pollTimer);
+      const interval = (Date.now() - lastActivity < ACTIVE_WINDOW_MS) ? ACTIVE_MS : IDLE_MS;
+      pollTimer = setTimeout(async () => {
+        if (document.visibilityState === 'visible' && !pushing) await pullState();
+        schedulePoll();
+      }, interval);
+    }
+    schedulePoll();
+
     document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') pullState();
+      if (document.visibilityState === 'visible') {
+        bump();
+        pullState();
+        schedulePoll();
+      }
     });
   }
 
