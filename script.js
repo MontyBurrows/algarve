@@ -419,10 +419,17 @@
     const SYNC_HEADERS = SYNC_ENABLED ? { 'X-Access-Key': cfg.JSONBIN_KEY } : null;
 
     let active = 'realistic';
-    let state = {
-      realistic: Array(25).fill(false),
-      fun: Array(25).fill(false)
-    };
+    function emptyState() {
+      return {
+        realistic: Array(25).fill(false),
+        fun: Array(25).fill(false),
+        ts: {
+          realistic: Array(25).fill(0),
+          fun: Array(25).fill(0)
+        }
+      };
+    }
+    let state = emptyState();
     state.realistic[FREE] = true;
     state.fun[FREE] = true;
 
@@ -442,10 +449,8 @@
     function loadLocal() {
       try {
         const saved = JSON.parse(localStorage.getItem(LS_KEY));
-        if (saved && Array.isArray(saved.realistic) && Array.isArray(saved.fun)
-          && saved.realistic.length === 25 && saved.fun.length === 25) {
-          state = saved;
-        }
+        const norm = normalise(saved);
+        if (norm) state = norm;
       } catch (e) {}
       state.realistic[FREE] = true;
       state.fun[FREE] = true;
@@ -457,10 +462,31 @@
 
     function normalise(remote) {
       if (!remote || typeof remote !== 'object') return null;
-      const out = { realistic: Array(25).fill(false), fun: Array(25).fill(false) };
+      const out = emptyState();
       ['realistic', 'fun'].forEach(card => {
         if (Array.isArray(remote[card]) && remote[card].length === 25) {
           out[card] = remote[card].map(Boolean);
+        }
+        if (remote.ts && Array.isArray(remote.ts[card]) && remote.ts[card].length === 25) {
+          out.ts[card] = remote.ts[card].map(n => Number(n) || 0);
+        }
+      });
+      out.realistic[FREE] = true;
+      out.fun[FREE] = true;
+      return out;
+    }
+
+    function merge(local, remote) {
+      const out = emptyState();
+      ['realistic', 'fun'].forEach(card => {
+        for (let i = 0; i < 25; i++) {
+          if (remote.ts[card][i] > local.ts[card][i]) {
+            out[card][i] = remote[card][i];
+            out.ts[card][i] = remote.ts[card][i];
+          } else {
+            out[card][i] = local[card][i];
+            out.ts[card][i] = local.ts[card][i];
+          }
         }
       });
       out.realistic[FREE] = true;
@@ -471,22 +497,23 @@
     let lastActivity = 0;
     function bump() { lastActivity = Date.now(); }
 
+    async function fetchRemote() {
+      const r = await fetch(READ_URL, { cache: 'no-store', headers: SYNC_HEADERS });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const body = await r.json();
+      return normalise(body && body.record);
+    }
+
     async function pullState() {
       if (!SYNC_ENABLED) { setSync('This device only', 'error'); return; }
       try {
-        const r = await fetch(READ_URL, { cache: 'no-store', headers: SYNC_HEADERS });
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        const body = await r.json();
-        const remote = normalise(body && body.record);
+        const remote = await fetchRemote();
         if (remote) {
           const before = JSON.stringify(state);
-          const after = JSON.stringify(remote);
-          if (before !== after) {
-            state = remote;
-            saveLocal();
-            render();
-            bump();
-          }
+          state = merge(state, remote);
+          saveLocal();
+          render();
+          if (JSON.stringify(state) !== before) bump();
           setSync('Synced', 'ok');
         }
       } catch (e) {
@@ -504,6 +531,14 @@
         if (pushing) { pushTimer = setTimeout(pushState, 200); return; }
         pushing = true;
         try {
+          try {
+            const remote = await fetchRemote();
+            if (remote) {
+              state = merge(state, remote);
+              saveLocal();
+              render();
+            }
+          } catch (e) {}
           const r = await fetch(WRITE_URL, {
             method: 'PUT',
             headers: Object.assign({ 'Content-Type': 'application/json' }, SYNC_HEADERS),
@@ -543,6 +578,7 @@
         if (i !== FREE) {
           cell.addEventListener('click', () => {
             state[active][i] = !state[active][i];
+            state.ts[active][i] = Date.now();
             saveLocal();
             render();
             bump();
@@ -584,7 +620,11 @@
 
     if (resetBtn) {
       resetBtn.addEventListener('click', () => {
-        state[active] = Array(25).fill(false);
+        const now = Date.now();
+        for (let i = 0; i < 25; i++) {
+          state[active][i] = false;
+          state.ts[active][i] = now;
+        }
         state[active][FREE] = true;
         saveLocal();
         render();
