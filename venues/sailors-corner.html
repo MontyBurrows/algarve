@@ -37,6 +37,12 @@
   <div class="wrap">
     <div class="detail-grid">
       <div class="detail-main">
+        <div class="venue-gallery" style="margin-bottom: 32px;">
+          <div class="photo" data-src="../img/sailors-corner-1.jpg" data-caption="Outdoor seating"><img src="../img/sailors-corner-1.jpg" alt="Outdoor seating" loading="lazy" /></div>
+          <div class="photo" data-src="../img/sailors-corner-2.jpg" data-caption="Interior"><img src="../img/sailors-corner-2.jpg" alt="Interior" loading="lazy" /></div>
+          <div class="photo" data-src="../img/sailors-corner-3.jpg" data-caption="Bar area"><img src="../img/sailors-corner-3.jpg" alt="Bar area" loading="lazy" /></div>
+          <div class="photo" data-src="../img/sailors-corner-4.jpg" data-caption="Seafront view"><img src="../img/sailors-corner-4.jpg" alt="Seafront view" loading="lazy" /></div>
+        </div>
         <div class="venue-body">
           <p>A Quarteira seafront staple. Good for relaxed lunches - nothing fancy, but reliable food in a good spot. This is Thursday's first lunch together when Monty finishes work at 13:00, and Sunday's final meal before heading to Faro Airport.</p>
           <p style="margin-top: 16px;">Sagres on tap, outdoor tables overlooking the street or seafront, simple menu. Perfect for when you want something easy and a final beer without any ceremony. Good way to close the trip before the 15:00 Uber to FAO.</p>
@@ -69,6 +75,16 @@
   </div>
 </section>
 
+<div class="lightbox" id="lightbox">
+  <div class="lb-content">
+    <button class="lb-close" id="lbClose">&times;</button>
+    <button class="lb-nav lb-prev" id="lbPrev">&lsaquo;</button>
+    <button class="lb-nav lb-next" id="lbNext">&rsaquo;</button>
+    <img id="lbImg" src="" alt="" />
+    <div class="lb-counter" id="lbCounter"></div>
+  </div>
+</div>
+
 <footer>
   <div class="wrap">
     <div class="signoff">Boa viagem, rapazes.</div>
@@ -76,6 +92,8 @@
     <div class="meta">Quarteira &middot; Vilamoura &middot; Algarve &middot; 21 - 24 May 2026</div>
   </div>
 </footer>
+
+<script src="../script.js"></script>
 
 <script src="../script.js"></script>
 </body>
