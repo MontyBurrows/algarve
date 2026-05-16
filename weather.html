@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weather · Algarve May '26</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="nav-inner">
+    <a href="index.html" class="brand"><span class="brand-dot"></span>Algarve &middot; May '26</a>
+    <ul>
+      <li><a href="itinerary.html">Days</a></li>
+      <li><a href="calm.html">Calm</a></li>
+      <li><a href="lively.html">Lively</a></li>
+      <li><a href="walks.html">Walks</a></li>
+      <li><a href="eat.html">Eat</a></li>
+      <li><a href="phrases.html">Phrases</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="page-hero" style="background: var(--bg-warm);">
+  <div class="wrap">
+    <a class="page-back" href="index.html">&#8592; Home</a>
+    <h1>Algarve <em>weather</em>.</h1>
+    <p class="lede">Live 16-day forecast for Quarteira and Vilamoura. Trip days (21-24 May) are highlighted. Met Office model data, winds in mph. Click any day to expand hourly detail.</p>
+  </div>
+</header>
+
+<section class="block" id="forecast">
+  <div class="wrap">
+
+    <div class="note cool" style="margin-bottom: 40px;">
+      <strong>May average:</strong> Highs around 24-26&deg;C, sunny with low chance of rain. The Algarve gets around 300 days of sun per year - May is one of the best months. Evenings are warm but bring a light layer for the marina.
+    </div>
+
+    <div id="weather-loading">Loading forecast&hellip;</div>
+    <div id="weather-grid" style="display:none;"></div>
+    <div id="weather-error" style="display:none;">
+      <p>Could not load the forecast right now. <a href="https://www.bbc.co.uk/weather/2267057" target="_blank" rel="noopener" style="color:var(--terracotta)">Check BBC Weather for Quarteira &rarr;</a></p>
+    </div>
+
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="signoff">Boa viagem, rapazes.</div>
+    <div class="total-flex">Sun, sea, port at sunset, a Saturday on the marina.</div>
+    <div class="meta">Quarteira &middot; Vilamoura &middot; Algarve &middot; 21 - 24 May 2026</div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
