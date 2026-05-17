@@ -21,7 +21,7 @@
   }, { capture: true });
 
   // ── App version - keep in sync with VERSION constant at top of sw.js ──
-  const APP_VERSION = 'v16';
+  const APP_VERSION = 'v17';
 
   // ── Service worker: offline support + auto-update on new deploys ────
   // When a new SW activates we reload the page automatically so users
@@ -311,65 +311,62 @@
     }
   }
 
-  // ── Pull-to-refresh (mobile, on data-heavy pages) ───────────────
-  if (document.getElementById('weather-grid') || document.getElementById('bingo-board')) {
-    if (window.matchMedia('(max-width: 920px)').matches && 'ontouchstart' in window) {
-      const ind = document.createElement('div');
-      ind.className = 'ptr-indicator';
-      ind.innerHTML = '<div class="ptr-spinner"></div>';
-      document.body.appendChild(ind);
+  // ── Pull-to-refresh (mobile web app) ───────────────────────
+  const canPullToRefresh = window.matchMedia('(max-width: 920px)').matches
+    && 'ontouchstart' in window
+    && !document.querySelector('.ptr-indicator');
 
-      let startY = 0, pulled = 0, dragging = false, refreshing = false;
-      const THRESHOLD = 70;
-      const MAX_PULL = 110;
+  if (canPullToRefresh) {
+    const ind = document.createElement('div');
+    ind.className = 'ptr-indicator';
+    ind.innerHTML = '<div class="ptr-spinner"></div>';
+    document.body.appendChild(ind);
 
-      const onStart = (e) => {
-        if (refreshing || window.scrollY > 0) return;
-        startY = e.touches[0].clientY;
-        pulled = 0;
-        dragging = true;
-        ind.style.transition = 'none';
-      };
-      const onMove = (e) => {
-        if (!dragging) return;
-        if (window.scrollY > 0) { dragging = false; ind.style.transform = ''; return; }
-        const delta = e.touches[0].clientY - startY;
-        if (delta <= 0) { pulled = 0; ind.style.transform = ''; ind.style.opacity = ''; ind.classList.remove('ready'); return; }
-        // Damped translation for natural feel
-        const wasReady = ind.classList.contains('ready');
-        pulled = Math.min(delta * 0.55, MAX_PULL);
-        ind.style.transform = `translateX(-50%) translateY(${pulled}px)`;
-        ind.style.opacity = Math.min(pulled / 40, 1);
-        const ready = pulled >= THRESHOLD;
-        ind.classList.toggle('ready', ready);
-        if (ready && !wasReady && window.haptic) window.haptic('heavy');
-      };
-      const onEnd = () => {
-        if (!dragging) return;
-        dragging = false;
-        ind.style.transition = '';
-        if (pulled >= THRESHOLD) {
-          refreshing = true;
-          ind.classList.add('refreshing');
-          ind.classList.remove('ready');
-          ind.style.transform = `translateX(-50%) translateY(${THRESHOLD}px)`;
-          // Use view transition if available for a smoother reload feel
-          if (document.startViewTransition) {
-            setTimeout(() => location.reload(), 250);
-          } else {
-            setTimeout(() => location.reload(), 250);
-          }
-        } else {
-          ind.style.transform = '';
-          ind.style.opacity = '';
-        }
-      };
+    let startY = 0, pulled = 0, dragging = false, refreshing = false;
+    const THRESHOLD = 70;
+    const MAX_PULL = 110;
 
-      document.addEventListener('touchstart', onStart, { passive: true });
-      document.addEventListener('touchmove', onMove, { passive: true });
-      document.addEventListener('touchend', onEnd);
-      document.addEventListener('touchcancel', onEnd);
-    }
+    const onStart = (e) => {
+      if (refreshing || window.scrollY > 0) return;
+      startY = e.touches[0].clientY;
+      pulled = 0;
+      dragging = true;
+      ind.style.transition = 'none';
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      if (window.scrollY > 0) { dragging = false; ind.style.transform = ''; return; }
+      const delta = e.touches[0].clientY - startY;
+      if (delta <= 0) { pulled = 0; ind.style.transform = ''; ind.style.opacity = ''; ind.classList.remove('ready'); return; }
+      // Damped translation for natural feel
+      const wasReady = ind.classList.contains('ready');
+      pulled = Math.min(delta * 0.55, MAX_PULL);
+      ind.style.transform = `translateX(-50%) translateY(${pulled}px)`;
+      ind.style.opacity = Math.min(pulled / 40, 1);
+      const ready = pulled >= THRESHOLD;
+      ind.classList.toggle('ready', ready);
+      if (ready && !wasReady && window.haptic) window.haptic('heavy');
+    };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      ind.style.transition = '';
+      if (pulled >= THRESHOLD) {
+        refreshing = true;
+        ind.classList.add('refreshing');
+        ind.classList.remove('ready');
+        ind.style.transform = `translateX(-50%) translateY(${THRESHOLD}px)`;
+        setTimeout(() => location.reload(), 250);
+      } else {
+        ind.style.transform = '';
+        ind.style.opacity = '';
+      }
+    };
+
+    document.addEventListener('touchstart', onStart, { passive: true });
+    document.addEventListener('touchmove', onMove, { passive: true });
+    document.addEventListener('touchend', onEnd);
+    document.addEventListener('touchcancel', onEnd);
   }
 
   // ── Accordion (day dropdowns) ───────────────────────────────────
