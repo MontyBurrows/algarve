@@ -1,6 +1,6 @@
 // Algarve service worker - offline support for the trip site.
 // Bump VERSION any time the precache list or runtime strategy changes.
-const VERSION = 'v20';
+const VERSION = 'v21';
 const STATIC_CACHE = `algarve-static-${VERSION}`;
 const RUNTIME_CACHE = `algarve-runtime-${VERSION}`;
 
